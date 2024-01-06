@@ -26,6 +26,8 @@ type Quiz struct {
 	YourAnswer    Answer
 }
 
+var Operators string = "+-*/"
+
 func (q *Quiz) CheckAnswer() bool {
 	return q.CorrectAnswer.Value == q.YourAnswer.Value
 }
@@ -75,12 +77,26 @@ func readFile(fileName string) [][]string {
 	return records
 }
 
-func CreateListOfQuizes(fileName, customOperator string) []Quiz {
+func findOperator(record string) string {
+	operators := strings.Split(Operators, "")
+	for _, operator := range operators {
+		if strings.Contains(record, operator) {
+			return operator
+		}
+	}
+	return ""
+}
+
+func CreateListOfQuizes(fileName string) []Quiz {
 	records := readFile(fileName)
 
 	quizes := make([]Quiz, 0, len(records))
 	for _, record := range records {
-		equation := strings.Split(record[0], customOperator)
+		operator := findOperator(record[0])
+		if operator == "" {
+			continue
+		}
+		equation := strings.Split(record[0], operator)
 
 		if len(equation) != 2 {
 			fmt.Printf("Invalid equation format: %s\n", record[0])
@@ -101,7 +117,7 @@ func CreateListOfQuizes(fileName, customOperator string) []Quiz {
 
 		quiz := Quiz{}
 
-		quiz.CreateQuiz(a, b, customOperator)
+		quiz.CreateQuiz(a, b, operator)
 		quizes = append(quizes, quiz)
 
 	}
@@ -132,7 +148,7 @@ func (tracker *ScoreTracker) StartQuiz(quizes []Quiz) int64 {
 
 func main() {
 	var quizGames QuizGames = &ScoreTracker{}
-	quizes := CreateListOfQuizes("problems.csv", "+")
+	quizes := CreateListOfQuizes("problems.csv")
 	mistakes := quizGames.StartQuiz(quizes)
 
 	correctAnswers := int64(len(quizes)) - mistakes
