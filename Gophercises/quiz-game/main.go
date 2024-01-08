@@ -11,7 +11,7 @@ import (
 )
 
 type QuizGames interface {
-	StartQuiz([]Quiz) int64
+	StartQuiz([]Quiz, chan bool)
 }
 type Question struct {
 	A, B     int64
@@ -55,6 +55,10 @@ func (c *CalculateQuizGame) IncrementMistakes() {
 
 func (c *CalculateQuizGame) IncrementAnswers() {
 	c.Answers++
+}
+
+func (c *CalculateQuizGame) getAmountCorrectAnswers() int64 {
+	return c.Answers - c.Mistakes
 }
 
 func (q *Quiz) CreateQuiz(a, b int64, operator string) {
@@ -133,36 +137,56 @@ func CreateListOfQuizes(fileName string) []Quiz {
 	return quizes
 }
 
-func (tracker *CalculateQuizGame) StartQuiz(quizes []Quiz) int64 {
-	var userAnswer int64
+func (tracker *CalculateQuizGame) StartQuiz(quizes []Quiz, done chan bool) {
+	defer func() {
+		done <- true
+	}()
+	timer := time.NewTimer(time.Duration(tracker.Timer) * time.Second)
 	for i := 0; i < len(quizes); i++ {
-		tracker.IncrementAnswers()
 		fmt.Printf("Question %d: What is %v %v %v? ", i+1, quizes[i].Question.A, quizes[i].Question.Operator, quizes[i].Question.B)
 
-		_, err := fmt.Scan(&userAnswer)
-		if err != nil {
-			fmt.Println("Inncorrect answer, try again.")
-			i--
-			continue
+		answerChan := make(chan int64)
+		go func() {
+			var answer int64
+			fmt.Scan(&answer)
+			answerChan <- answer
+		}()
+
+		select {
+		case <-timer.C:
+			fmt.Println("Time's up!")
+			return
+		case userAnswer := <-answerChan:
+			quizes[i].YourAnswer.Value = userAnswer
+			if !quizes[i].CheckAnswer() {
+				tracker.IncrementMistakes()
+			} else {
+				tracker.IncrementAnswers()
+			}
+			fmt.Printf("Your answer: %v. Correct: %v.\n", quizes[i].YourAnswer.Value, quizes[i].CorrectAnswer.Value)
 		}
-		quizes[i].YourAnswer.Value = userAnswer
-		if !quizes[i].CheckAnswer() {
-			tracker.IncrementMistakes()
-		}
-		fmt.Printf("Your answer: %v. Correct: %v.\n", quizes[i].YourAnswer.Value, quizes[i].CorrectAnswer.Value)
 
 	}
-	return tracker.Mistakes
 }
 
-func main() {
-	var start string
+var (
+	start    string
+	fileName string
+	timer    int64
+	quizes   []Quiz
+)
 
-	timer := flag.Int64("timer", 30, "Time to execute quiz")
+func init() {
+	flag.StringVar(&fileName, "fileName", "problems.csv", "CSV file with quiz questions")
+	flag.Int64Var(&timer, "timer", 30, "Time to execute quiz")
+
 	flag.Parse()
 
+	quizes = CreateListOfQuizes(fileName)
+}
+func main() {
 	for start != "y" {
-		calcGame := CalculateQuizGame{Timer: *timer}
+		calcGame := CalculateQuizGame{Timer: timer}
 
 		var quizGames QuizGames = &calcGame
 
@@ -172,19 +196,12 @@ func main() {
 			break
 		}
 
-		quizes := CreateListOfQuizes("problems.csv")
-
 		done := make(chan bool)
 		go func() {
-			quizGames.StartQuiz(quizes)
-			done <- true
+			quizGames.StartQuiz(quizes, done)
 		}()
-		select {
-		case <-time.After(time.Duration(calcGame.Timer) * time.Second):
-			fmt.Println("Time's up!")
-		case <-done:
-		}
-		correctAnswers := calcGame.Answers - calcGame.Mistakes
+		<-done
+		correctAnswers := calcGame.getAmountCorrectAnswers()
 
 		fmt.Printf("Your score: %v/%v! \n", correctAnswers, calcGame.Answers)
 		start = ""
