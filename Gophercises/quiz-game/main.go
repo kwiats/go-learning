@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type QuizGames interface {
@@ -41,12 +43,18 @@ func (q *Quiz) CalculateCorrectAnswer() {
 	}
 }
 
-type ScoreTracker struct {
+type CalculateQuizGame struct {
 	Mistakes int64
+	Timer    int64
+	Answers  int64
 }
 
-func (c *ScoreTracker) IncrementMistakes() {
+func (c *CalculateQuizGame) IncrementMistakes() {
 	c.Mistakes++
+}
+
+func (c *CalculateQuizGame) IncrementAnswers() {
+	c.Answers++
 }
 
 func (q *Quiz) CreateQuiz(a, b int64, operator string) {
@@ -125,9 +133,10 @@ func CreateListOfQuizes(fileName string) []Quiz {
 	return quizes
 }
 
-func (tracker *ScoreTracker) StartQuiz(quizes []Quiz) int64 {
+func (tracker *CalculateQuizGame) StartQuiz(quizes []Quiz) int64 {
 	var userAnswer int64
 	for i := 0; i < len(quizes); i++ {
+		tracker.IncrementAnswers()
 		fmt.Printf("Question %d: What is %v %v %v? ", i+1, quizes[i].Question.A, quizes[i].Question.Operator, quizes[i].Question.B)
 
 		_, err := fmt.Scan(&userAnswer)
@@ -147,12 +156,38 @@ func (tracker *ScoreTracker) StartQuiz(quizes []Quiz) int64 {
 }
 
 func main() {
-	var quizGames QuizGames = &ScoreTracker{}
-	quizes := CreateListOfQuizes("problems.csv")
-	mistakes := quizGames.StartQuiz(quizes)
+	var start string
 
-	correctAnswers := int64(len(quizes)) - mistakes
+	timer := flag.Int64("timer", 30, "Time to execute quiz")
+	flag.Parse()
 
-	fmt.Printf("Your score: %v/%v! \n", correctAnswers, len(quizes))
+	for start != "y" {
+		calcGame := CalculateQuizGame{Timer: *timer}
+
+		var quizGames QuizGames = &calcGame
+
+		fmt.Println("Press Y to start the quiz...")
+		_, err := fmt.Scan(&start)
+		if start != "y" || err != nil {
+			break
+		}
+
+		quizes := CreateListOfQuizes("problems.csv")
+
+		done := make(chan bool)
+		go func() {
+			quizGames.StartQuiz(quizes)
+			done <- true
+		}()
+		select {
+		case <-time.After(time.Duration(calcGame.Timer) * time.Second):
+			fmt.Println("Time's up!")
+		case <-done:
+		}
+		correctAnswers := calcGame.Answers - calcGame.Mistakes
+
+		fmt.Printf("Your score: %v/%v! \n", correctAnswers, calcGame.Answers)
+		start = ""
+	}
 
 }
