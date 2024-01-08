@@ -1,4 +1,4 @@
-# go-learning
+# Go-lang ;)
 
 # Ciekawe zrodla 
 
@@ -11,3 +11,10 @@
 [Concurrency](https://www.golang-book.com/books/intro/10)
 
 [Config Pattern - defualt value and setting values](https://www.youtube.com/watch?v=N0ZJt5VtvVE)
+
+[Linter GO](https://golangci-lint.run/contributing/workflow/)
+
+# Custom alias
+`
+alias golint="golangci-lint run -v;gofmt -w ."
+`

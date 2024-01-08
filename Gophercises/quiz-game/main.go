@@ -181,9 +181,9 @@ func init() {
 	flag.Int64Var(&timer, "timer", 30, "Time to execute quiz")
 
 	flag.Parse()
-
 	quizes = CreateListOfQuizes(fileName)
 }
+
 func main() {
 	for start != "y" {
 		calcGame := CalculateQuizGame{Timer: timer}
