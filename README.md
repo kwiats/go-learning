@@ -14,6 +14,8 @@
 
 [Linter GO](https://golangci-lint.run/contributing/workflow/)
 
+[Wzorce projektowe GO](https://www.reddit.com/r/golang/comments/1887y1b/favorite_golang_design_patterns/)
+
 # Custom alias
 `
 alias golint="golangci-lint run -v;gofmt -w ."
