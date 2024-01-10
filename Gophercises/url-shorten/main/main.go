@@ -28,8 +28,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	json := `[
+		{
+			"path": "/my-github",
+			"url": "https://github.com/kwiats"
+		}
+	]`
+	jsonHandler, err := urlshort.JSONHandler([]byte(json), yamlHandler)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("Starting the server on :8080")
-	http.ListenAndServe(":8080", yamlHandler)
+	http.ListenAndServe(":8080", jsonHandler)
 }
 
 func defaultMux() *http.ServeMux {
