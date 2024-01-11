@@ -16,6 +16,9 @@
 
 [Wzorce projektowe GO](https://www.reddit.com/r/golang/comments/1887y1b/favorite_golang_design_patterns/)
 
+[Kurs GO?](https://quii.gitbook.io/learn-go-with-tests/go-fundamentals/reflection)
+
+[JSON to GO](https://mholt.github.io/json-to-go/)
 # Custom alias
 `
 alias golint="golangci-lint run -v;gofmt -w ."

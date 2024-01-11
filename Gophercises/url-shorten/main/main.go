@@ -1,10 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	urlshort "url-shorten"
+
+	"github.com/go-delve/delve/pkg/dwarf/reader"
+	"gopkg.in/yaml.v3"
 )
+
+var (
+	yamlFile string
+	jsonFile string
+)
+
+func init() {
+	flag.StringVar(&yamlFile, "yaml", "", "YamlHANDLER")
+	flag.StringVar(&jsonFile, "json", "", "JsonHANDLER")
+	flag.Parse()
+}
 
 func main() {
 	mux := defaultMux()
@@ -18,12 +35,19 @@ func main() {
 
 	// Build the YAMLHandler using the mapHandler as the
 	// fallback
-	yaml := `
-- path: /urlshort
-  url: https://github.com/gophercises/urlshort
-- path: /urlshort-final
-  url: https://github.com/gophercises/urlshort/tree/solution
-`
+	var yaml string
+	if yamlFile == "" {
+		yaml = `
+		- path: /urlshort
+		  url: https://github.com/gophercises/urlshort
+		- path: /urlshort-final
+		  url: https://github.com/gophercises/urlshort/tree/solution
+		`
+	} else {
+		yaml, _ = openFile(yamlFile)
+	}
+
+	fmt.Print(yamlFile)
 	yamlHandler, err := urlshort.YAMLHandler([]byte(yaml), mapHandler)
 	if err != nil {
 		panic(err)
@@ -50,4 +74,20 @@ func defaultMux() *http.ServeMux {
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Hello, world!")
+}
+
+func openFile(fileName string) (string, error) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	switch strings.Split(fileName, ".")[1] {
+	case "yaml":
+		yaml.Unmarshal(file, )
+		return "", nil
+	case "json":
+		return "", nil
+	}
+	return "", nil
 }

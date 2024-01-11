@@ -1,3 +1,5 @@
+github.com/go-delve/delve v1.22.0 h1:c7GOFs49/jMGHdp10KphKkGqNmLjOp7fcwz1MQwcMlw=
+github.com/go-delve/delve v1.22.0/go.mod h1:cSvtTzN0Ei8NsPH7TbxeQSLBmdsreeAD5p1UNhrII7w=
 github.com/gophercises/urlshort v0.0.0-20190723121003-cc800dbaf411 h1:jXluXk94Xa6OHiVJFuYsJFrCvcc87iAdOQMy6BCkQiw=
 github.com/gophercises/urlshort v0.0.0-20190723121003-cc800dbaf411/go.mod h1:uSADXLeo9rvYEF7fbNcZ9/84Tk8j3gggJ/ha5iO21MI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
